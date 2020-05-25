@@ -1,1 +1,1 @@
-worker: python LitCheck.py
+  worker: python LitCheck.py

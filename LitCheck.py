@@ -9,9 +9,15 @@ import os
 client = commands.Bot(command_prefix = "&")
 
 #-------------------------
+#-------events------------
+#-------------------------
+@client.event
+async def on_ready():
+    print('I am ready.')
+
+#-------------------------
 #-------commands----------
 #-------------------------
-
 
 @client.command()
 async def user(ctx, user_name):
@@ -131,11 +137,5 @@ async def help(ctx):
     help_message += "```"
     await ctx.channel.send(help_message)
 
-#-------------------------
-#-------events------------
-#-------------------------
-@client.event
-async def on_ready():
-    print('I am ready.')
 
 client.run(os.environ['TOKEN'])
