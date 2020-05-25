@@ -134,22 +134,23 @@ async def help(ctx):
     commands_and_description = ["&user <leetcode username> -- Quick info on the amount of leetcode problems done",
                                 "&board -- This shows the current leaderboard rated by the amount of problems done in the current week",
                                 "&addReq <leetcode username> -- Requests one of the managers to add this user to the log",
-                                "&clr *not required*<specific amount of messages> -- Deleted the amount of messages specified, max = 50, default = 10",
+                                "&clrm *not required*<specific amount of messages> -- Deleted the amount of messages specified, max = 50, default = 10",
                                 "&add <leetcode username> -- This adds the requested username to the log",
                                 "&remove <leetcode username> -- This removes a user from the log",
-                                "&reset -- resets the leaderboard and the logged data"]
+                                "&reset -- resets the leaderboard",
+                                "clrl -- deletes and clears all the users from the log"]
     isManager = False
     i = ctx.author.roles
     k = 3
     for j in i:
         if("leetcode-manager" == j.name):
             isManager = True
-            k = 7
-    help_message = "```\n"
+            k = len(commands_and_description)
+    help_message = "{-^20}```\n".format("-")
     for x in range(0, k):
         help_message += commands_and_description[x]
         help_message += "\n\n"
-    help_message += "```"
+    help_message += "```{-^20}".format("-")
     await ctx.channel.send(help_message)
 
 
