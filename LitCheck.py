@@ -21,8 +21,9 @@ async def on_ready():
 
 @client.command()
 async def user(ctx, user_name):
-    if(problems(ctx,user_name) != -1):
-        await ctx.channel.send(f'```{user_name} has solved {problems(ctx, user_name)} problems```')
+    j = await problems(ctx,user_name)
+    if(j != -1):
+        await ctx.channel.send(f'```{user_name} has solved {j} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
         await ctx.channel.send(random.choice(messages))
@@ -50,7 +51,8 @@ async def get_list(ctx, users):
     probs = []
     for i in users:
         names.append(i)
-        probs.append(problems(ctx, i)-users[i]["problems"])
+        j = await problems(ctx, i)
+        probs.append(j-users[i]["problems"])
     stats = {}
     for i in range(0, len(names)):
         stats.update({names[i] : probs[i]})
@@ -80,8 +82,9 @@ async def add(ctx, user):
         with open('leetusers.json', 'r') as f:
             users = json.load(f)
             f.close()
+        j = await problems(ctx, user)
         users[user] = {}
-        users[user]["problems"] = problems(ctx, user)
+        users[user]["problems"] = j
         with open('leetusers.json', 'w') as f:
             json.dump(users, f, indent = 4, sort_keys = True)
         await ctx.channel.send("```diff\n+Added Successfully!```")
