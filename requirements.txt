@@ -1,5 +1,4 @@
 discord
-random
 requests
 bs4
 json
