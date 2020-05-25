@@ -7,10 +7,10 @@ import json
 import os
 
 client = commands.Bot(command_prefix = "&")
-
 #-------------------------
 #-------events------------
 #-------------------------
+
 @client.event
 async def on_ready():
     print('I am ready.')
@@ -22,12 +22,12 @@ async def on_ready():
 @client.command()
 async def user(ctx, user_name):
     if(problems(ctx,user_name) != -1):
-        await ctx.channel.send(f'```{user_name} has solved {problems(ctx = ctx, user_name = user_name)} problems```')
+        await ctx.channel.send(f'```{user_name} has solved {problems(ctx, user_name)} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
         await ctx.channel.send(random.choice(messages))
 
-async def problems(ctx, user_name):
+def problems(self, user_name):
     my_url = f'http://leetcode.com/{user_name}'
     page = requests.get(my_url)
     soup = BeautifulSoup(page.content, 'lxml')
