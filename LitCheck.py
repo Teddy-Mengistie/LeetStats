@@ -67,8 +67,15 @@ async def get_list(ctx, users):
         board +="```"
         await ctx.channel.send(board)
     except ValueError:
-        await ctx.channel.send("```diff\n-Add users with &add <userName>```")
-
+        isManager = False
+        i = ctx.message.author.roles
+        for j in i:
+            if("leetcode-manager" == j.name):
+                isManager = True
+        if (isManager):
+            await ctx.channel.send("```diff\n-Add users with &add <userName>```")
+        else:
+            await ctx.channel.send("```diff\n-Request to add users with &addReq <userName>```")
 
 @client.command(name = "addReq")
 async def add_request(ctx, userName):
