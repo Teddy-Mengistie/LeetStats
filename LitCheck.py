@@ -21,7 +21,7 @@ async def on_ready():
 
 @client.command()
 async def user(ctx, user_name):
-    j = await problems(ctx,user_name)
+    j = problems(ctx,user_name)
     if(j != -1):
         await ctx.channel.send(f'```{user_name} has solved {j} problems```')
     else:
@@ -51,7 +51,7 @@ async def get_list(ctx, users):
     probs = []
     for i in users:
         names.append(i)
-        j = await problems(ctx, i)
+        j = problems(ctx, i)
         probs.append(j-users[i]["problems"])
     stats = {}
     for i in range(0, len(names)):
@@ -82,7 +82,7 @@ async def add(ctx, user):
         with open('leetusers.json', 'r') as f:
             users = json.load(f)
             f.close()
-        j = await problems(ctx, user)
+        j = problems(ctx, user)
         users[user] = {}
         users[user]["problems"] = j
         with open('leetusers.json', 'w') as f:
