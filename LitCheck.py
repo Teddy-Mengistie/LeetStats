@@ -150,7 +150,7 @@ async def help(ctx):
     for x in range(0, k):
         help_message += commands_and_description[x]
         help_message += "\n\n"
-    help_message += "```{-^20}".format("-")
+    help_message += "```{:-^20}".format("-")
     await ctx.channel.send(help_message)
 
 
