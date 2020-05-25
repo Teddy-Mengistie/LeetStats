@@ -73,7 +73,7 @@ async def get_list(ctx, users):
         name, prob = zip(*y)
         board = "```{}\n".format("Current Week Leaderboard")
         for i in range(0, len(y)):
-            board += "{}){:>10} {:>10} {:>10} {:>10} {:>10}\n".format(i+1, name[i], ":",prob[i], ":", probs[i])
+            board += "{}){:>10} {:>10} {:>10}\n".format(i+1, name[i], ":",prob[i])
         board +="```"
         await ctx.channel.send(board)
     except ValueError:
@@ -98,7 +98,7 @@ async def add_request(ctx, userName):
              await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
     else:
         await ctx.channel.send("```diff\n-User does not exist!```")
-        
+
 @client.command(name = "add")
 @commands.has_role("leetcode-manager")
 async def add(ctx, user):
