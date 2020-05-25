@@ -15,7 +15,7 @@ client = commands.Bot(command_prefix = "&")
 
 @client.command()
 async def user(ctx, user_name):
-    if(await problems(ctx = ctx, user_name = user_name) != -1):
+    if(problems(ctx,user_name) != -1):
         await ctx.channel.send(f'```{user_name} has solved {await problems(ctx = ctx, user_name = user_name)} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
