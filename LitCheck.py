@@ -146,12 +146,12 @@ async def help(ctx):
         if("leetcode-manager" == j.name):
             isManager = True
             k = len(commands_and_description)
-    help_message = "{-^20}```\n".format("-")
+    help_message = "```\n"
     for x in range(0, k):
         help_message += commands_and_description[x]
         help_message += "\n\n"
-    help_message += "```{:-^20}".format("-")
-    await ctx.channel.send(help_message)
+    help_message += "```"
+    await ctx.author.send(help_message)
 
 
 client.run(os.environ['TOKEN'])
