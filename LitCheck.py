@@ -93,9 +93,12 @@ async def add_request(ctx, userName):
     for r in ctx.channel.guild.roles:
          if(r.name == "leetcode-manager"):
              m = r.members
-    for x in m:
-         await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
-
+    if(problems(ctx, userName) != -1):
+        for x in m:
+             await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
+    else:
+        await ctx.channel.send("```diff\n-User does not exist!```")
+        
 @client.command(name = "add")
 @commands.has_role("leetcode-manager")
 async def add(ctx, user):
