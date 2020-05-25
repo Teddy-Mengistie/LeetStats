@@ -16,6 +16,13 @@ client.remove_command("help")
 async def on_ready():
     print('I am ready.')
 
+@cient.event
+async def on_command_error(ctx, error):
+    messages = ["```diff\n-try again```", "```diff\n-misspelled something?```", "```diff\n-check again```"]
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.channel.send(random.choice(messages))
+        await help(ctx)
+
 #-------------------------
 #-------commands----------
 #-------------------------
