@@ -59,11 +59,14 @@ async def get_list(ctx, users):
     stats_sorted = sorted(stats.items(), key=lambda x: x[1], reverse=True)
     print(stats_sorted)
     y = list(stats_sorted)
-    name, prob = zip(*y)
-    board = "```"
-    for i in range(0, len(y)):
-        board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
-    board +="```"
+    try:
+        name, prob = zip(*y)
+        board = "```"
+        for i in range(0, len(y)):
+            board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
+        board +="```"
+    except ValueError:
+        await ctx.channel.send("Add users with &add <userName>")
     await ctx.channel.send(board)
 
 @client.command(name = "addReq")
