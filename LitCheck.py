@@ -137,4 +137,4 @@ async def help(ctx):
 async def on_ready():
     print('I am ready.')
 
-client.run('NzEyMDM5MzEwMDYwMjkwMTYx.XstkRA.zezXRoEgMUt0k4-5Lsm-G0CmxJw')
+client.run(TOKEN)
