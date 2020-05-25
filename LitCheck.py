@@ -5,16 +5,17 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import os
+
 client = commands.Bot(command_prefix = "&")
 
 #-------------------------
 #-------commands----------
 #-------------------------
 
+
 @client.command()
 async def user(ctx, user_name):
-    i = problems(ctx = ctx, user_name = user_name)
-    if(i != -1):
+    if(await problems(ctx = ctx, user_name = user_name) != -1):
         await ctx.channel.send(f'```{user_name} has solved {await problems(ctx = ctx, user_name = user_name)} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
@@ -136,5 +137,5 @@ async def help(ctx):
 @client.event
 async def on_ready():
     print('I am ready.')
-TOKEN = "NzEyMDM5MzEwMDYwMjkwMTYx.XstkRA.zezXRoEgMUt0k4-5Lsm-G0CmxJw"
-client.run(TOKEN)
+
+client.run(os.environ['TOKEN'])
