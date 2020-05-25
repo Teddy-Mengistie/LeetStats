@@ -115,6 +115,7 @@ async def clr_leet(ctx):
     users = {}
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
+    await ctx.channel.send("```diff\n+Cleared Successfully!```")
 
 @client.command(name = "clrm")
 @commands.has_permissions(manage_messages = True)
