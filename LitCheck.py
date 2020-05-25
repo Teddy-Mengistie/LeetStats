@@ -52,18 +52,20 @@ def problems(self, user_name):
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
-    users[user]["problems"] = problems(users, user)
+        users[user]["problems"] = problems(users, user)
 
 async def get_list(ctx, users):
     names = []
+    probs_week = []
     probs = []
     for i in users:
         names.append(i)
         j = problems(ctx, i)
-        probs.append(j-users[i]["problems"])
+        probs_week.append(j-users[i]["problems"])
+        probs.append(users[i]["problems"])
     stats = {}
     for i in range(0, len(names)):
-        stats.update({names[i] : probs[i]})
+        stats.update({names[i] : probs_week[i]})
     stats_sorted = sorted(stats.items(), key=lambda x: x[1], reverse=True)
     print(stats_sorted)
     y = list(stats_sorted)
@@ -71,7 +73,7 @@ async def get_list(ctx, users):
         name, prob = zip(*y)
         board = "```{}\n".format("Current Week Leaderboard")
         for i in range(0, len(y)):
-            board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
+            board += "{}){:>10} {:>10} {:>10} {:>10} {:>10}\n".format(i+1, name[i], ":",prob[i], ":", probs[i])
         board +="```"
         await ctx.channel.send(board)
     except ValueError:
@@ -102,11 +104,14 @@ async def add(ctx, user):
             users = json.load(f)
             f.close()
         j = problems(ctx, user)
-        users[user] = {}
-        users[user]["problems"] = j
+        if(j!=-1):
+            users[user] = {}
+            users[user]["problems"] = j
+            await ctx.channel.send("```diff\n+Added Successfully!```")
+        else:
+            await ctx.channel.send("```diff\n-Add unsuccessfull :(```")
         with open('leetusers.json', 'w') as f:
             json.dump(users, f, indent = 4, sort_keys = True)
-        await ctx.channel.send("```diff\n+Added Successfully!```")
 
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
