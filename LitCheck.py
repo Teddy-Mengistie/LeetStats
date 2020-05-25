@@ -7,6 +7,7 @@ import json
 import os
 
 client = commands.Bot(command_prefix = "&")
+client.remove_command("help")
 #-------------------------
 #-------events------------
 #-------------------------
@@ -61,7 +62,7 @@ async def get_list(ctx, users):
     y = list(stats_sorted)
     try:
         name, prob = zip(*y)
-        board = "```{:*>12}\n".format("Current Week Leaderboard")
+        board = "```{}\n".format("Current Week Leaderboard")
         for i in range(0, len(y)):
             board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
         board +="```"
@@ -136,7 +137,7 @@ async def clear(ctx, amount=10):
     else:
         await ctx.channel.purge(limit = 50)
 
-@client.command(name = "h",pass_context=True)
+@client.command(name = "help",pass_context=True)
 async def help(ctx):
     commands_and_description = ["&user <leetcode username> -- Quick info on the amount of leetcode problems done",
                                 "&board -- This shows the current leaderboard rated by the amount of problems done in the current week",
