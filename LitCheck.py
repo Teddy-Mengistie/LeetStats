@@ -22,7 +22,7 @@ async def on_ready():
 @client.command()
 async def user(ctx, user_name):
     if(problems(ctx,user_name) != -1):
-        await ctx.channel.send(f'```{user_name} has solved {await problems(ctx = ctx, user_name = user_name)} problems```')
+        await ctx.channel.send(f'```{user_name} has solved {problems(ctx = ctx, user_name = user_name)} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
         await ctx.channel.send(random.choice(messages))
@@ -43,14 +43,14 @@ async def problems(ctx, user_name):
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
-    users[user]["problems"] = await problems(users, user)
+    users[user]["problems"] = problems(users, user)
 
 async def get_list(ctx, users):
     names = []
     probs = []
     for i in users:
         names.append(i)
-        probs.append(await problems(ctx, i)-users[i]["problems"])
+        probs.append(problems(ctx, i)-users[i]["problems"])
     stats = {}
     for i in range(0, len(names)):
         stats.update({names[i] : probs[i]})
@@ -81,7 +81,7 @@ async def add(ctx, user):
             users = json.load(f)
             f.close()
         users[user] = {}
-        users[user]["problems"] = await problems(ctx, user)
+        users[user]["problems"] = problems(ctx, user)
         with open('leetusers.json', 'w') as f:
             json.dump(users, f, indent = 4, sort_keys = True)
         await ctx.channel.send("```diff\n+Added Successfully!```")
@@ -102,7 +102,7 @@ async def leaderboard(ctx):
     with open('leetusers.json', 'r') as f:
         users = json.load(f)
         f.close()
-    await get_list(ctx, users)
+    get_list(ctx, users)
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
 
