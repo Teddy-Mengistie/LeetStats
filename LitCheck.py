@@ -6,12 +6,10 @@ from bs4 import BeautifulSoup
 import json
 import os
 client = commands.Bot(command_prefix = "&")
-os.chdir(r'C:\Users\Bertukan A\Desktop\LitCheck')
 
-
-@client.event
-async def on_ready():
-    print('I am ready.')
+#-------------------------
+#-------commands----------
+#-------------------------
 
 @client.command()
 async def user(ctx, user_name):
@@ -26,68 +24,116 @@ async def problems(ctx, user_name):
     page = requests.get(my_url)
     soup = BeautifulSoup(page.content, 'lxml')
     #num problems done/1453
-    num_probs = soup.get_text().replace(" ", "")
+    num_probs = soup.get_text().replace("\n", "")
     if("/" in num_probs):
-        begin = num_probs.find("/1453")-4
-        end = num_probs.find("/1453")
+        begin = num_probs.find("/")-4
+        end = num_probs.find("/")
         return int(num_probs[begin: end].strip())
     else:
         return -1
 
-async def update_data(users, user, pre_probs):
-    if user in users:
-        del users[user]
-    if not user in users:
-        users[user] = {}
-        users[user]['problems'] = await problems(users, user_name = user)
-        if(await problems(users,user_name = user)-pre_probs == users[user]['problems']):
-            users[user]['problems done this week'] = 0
-        else:
-            users[user]['problems done this week'] = await problems(users,user_name = user)-pre_probs
+@client.command(name = "reset")
+@commands.has_role("leetcode-manager")
+async def reset(ctx):
+    users[user]["problems"] = await problems(users, user)
 
 async def get_list(ctx, users):
-        max = 0
-        maxs = []
-        max_user = ""
-        max_users = []
+    names = []
+    probs = []
+    for i in users:
+        names.append(i)
+        probs.append(await problems(ctx, i)-users[i]["problems"])
+    stats = {}
+    for i in range(0, len(names)):
+        stats.update({names[i] : probs[i]})
+    stats_sorted = sorted(stats.items(), key=lambda x: x[1], reverse=True)
+    print(stats_sorted)
+    y = list(stats_sorted)
+    name, prob = zip(*y)
+    board = "```"
+    for i in range(0, len(y)):
+        board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
+    board +="```"
+    await ctx.channel.send(board)
 
-        for x in users:
-            greater = False
-            k = users[x]["problems"]
-            for user in users:
-                j = users[user]["problems"]
-                if(not j in max_users and not k in max_users):
-                    if(j )
-            if()
-            await ctx.channel.send(f'{max_user}:{max}')
+@client.command(name = "addReq")
+async def add_request(ctx, userName):
+    m = []
+    for r in ctx.channel.guild.roles:
+         if(r.name == "leetcode-manager"):
+             m = r.members
+    for x in m:
+         await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
 
-@client.command()
-async def save(ctx, user_name):
-    x = 0
+@client.command(name = "add")
+@commands.has_role("leetcode-manager")
+async def add(ctx, user):
+        users = {}
+        with open('leetusers.json', 'r') as f:
+            users = json.load(f)
+            f.close()
+        users[user] = {}
+        users[user]["problems"] = await problems(ctx, user)
+        with open('leetusers.json', 'w') as f:
+            json.dump(users, f, indent = 4, sort_keys = True)
+        await ctx.channel.send("```diff\n+Added Successfully!```")
+
+@client.command(name = "rm")
+@commands.has_role("leetcode-manager")
+async def remove(ctx, user):
     with open('leetusers.json', 'r') as f:
         users = json.load(f)
-    if user_name in users:
-        x = users[user_name]['problems']
-    await update_data(users, user_name, pre_probs=x)
+        f.close()
+    del users[user]
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
+    await ctx.channel.send("```diff\n+Removed Successfully!```")
 
-@client.command()
+@client.command(name = "board")
 async def leaderboard(ctx):
     with open('leetusers.json', 'r') as f:
         users = json.load(f)
+        f.close()
     await get_list(ctx, users)
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
 
-@client.command(pass_context=True)
-async def hlp(ctx):
-    await ctx.channel.send("```\"&user <leetcode username goes here>\"```")
-
-@client.command()
+@client.command(name = "clr")
+@commands.has_permissions(manage_messages = True)
 async def clear(ctx, amount=10):
     if amount < 50:
         await ctx.channel.purge(limit=amount)
     else:
         await ctx.channel.purge(limit = 50)
-client.run('NzEyMDM5MzEwMDYwMjkwMTYx.XsLwsg.qIy94BpCf2pfArV1wVYxzYMEGu0')
+
+@client.command(name = "h",pass_context=True)
+async def help(ctx):
+    commands_and_description = ["&user <leetcode username> -- Quick info on the amount of leetcode problems done",
+                                "&board -- This shows the current leaderboard rated by the amount of problems done in the current week",
+                                "&addReq <leetcode username> -- Requests one of the managers to add this user to the log",
+                                "&clr *not required*<specific amount of messages> -- Deleted the amount of messages specified, max = 50, default = 10",
+                                "&add <leetcode username> -- This adds the requested username to the log",
+                                "&remove <leetcode username> -- This removes a user from the log",
+                                "&reset -- resets the leaderboard and the logged data"]
+    isManager = False
+    i = ctx.author.roles
+    k = 3
+    for j in i:
+        if("leetcode-manager" == j.name):
+            isManager = True
+            k = 7
+    help_message = "```\n"
+    for x in range(0, k):
+        help_message += commands_and_description[x]
+        help_message += "\n\n"
+    help_message += "```"
+    await ctx.channel.send(help_message)
+
+#-------------------------
+#-------events------------
+#-------------------------
+@client.event
+async def on_ready():
+    print('I am ready.')
+
+client.run('NzEyMDM5MzEwMDYwMjkwMTYx.XsspBQ.rOm6IaQN6Wnel1lrl8rkZwe2yqk')
