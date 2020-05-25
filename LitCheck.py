@@ -109,7 +109,14 @@ async def leaderboard(ctx):
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
 
-@client.command(name = "clr")
+@client.command(name = "clrl")
+@commands.has_role("leetcode-manager")
+async def clr_leet(ctx, user):
+    users = {}
+    with open('leetusers.json', 'w') as f:
+        json.dump(users, f, indent = 4, sort_keys = True)
+
+@client.command(name = "clrm")
 @commands.has_permissions(manage_messages = True)
 async def clear(ctx, amount=10):
     if amount < 50:
