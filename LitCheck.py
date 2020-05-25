@@ -111,7 +111,7 @@ async def leaderboard(ctx):
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
-async def clr_leet(ctx, user):
+async def clr_leet(ctx):
     users = {}
     with open('leetusers.json', 'w') as f:
         json.dump(users, f, indent = 4, sort_keys = True)
