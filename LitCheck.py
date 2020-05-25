@@ -61,7 +61,7 @@ async def get_list(ctx, users):
     y = list(stats_sorted)
     try:
         name, prob = zip(*y)
-        board = "```{:*>12}".format("Current Week Leaderboard")
+        board = "```{:*>12}\n".format("Current Week Leaderboard")
         for i in range(0, len(y)):
             board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
         board +="```"
