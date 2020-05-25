@@ -140,7 +140,7 @@ async def help(ctx):
                                 "&reset -- resets the leaderboard",
                                 "&clrl -- deletes and clears all the users from the log"]
     isManager = False
-    i = ctx.author.roles
+    i = ctx.message.author.roles
     k = 3
     for j in i:
         if("leetcode-manager" == j.name):
