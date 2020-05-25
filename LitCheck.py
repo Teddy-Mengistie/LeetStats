@@ -13,7 +13,7 @@ client = commands.Bot(command_prefix = "&")
 
 @client.command()
 async def user(ctx, user_name):
-    i = await problems(ctx = ctx, user_name = user_name)
+    i = problems(ctx = ctx, user_name = user_name)
     if(i != -1):
         await ctx.channel.send(f'```{user_name} has solved {await problems(ctx = ctx, user_name = user_name)} problems```')
     else:
