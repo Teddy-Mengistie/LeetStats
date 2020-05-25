@@ -65,9 +65,10 @@ async def get_list(ctx, users):
         for i in range(0, len(y)):
             board += "{}){:>12} {:>12} {:>12}\n".format(i+1, name[i], ":",prob[i])
         board +="```"
+        await ctx.channel.send(board)
     except ValueError:
         await ctx.channel.send("```diff\n-Add users with &add <userName>```")
-    await ctx.channel.send(board)
+
 
 @client.command(name = "addReq")
 async def add_request(ctx, userName):
