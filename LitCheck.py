@@ -136,5 +136,5 @@ async def help(ctx):
 @client.event
 async def on_ready():
     print('I am ready.')
-
+TOKEN = os.environ.get("DISCORD_BOT_SECRET")
 client.run(TOKEN)
