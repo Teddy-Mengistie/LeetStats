@@ -138,7 +138,7 @@ async def help(ctx):
                                 "&add <leetcode username> -- This adds the requested username to the log",
                                 "&remove <leetcode username> -- This removes a user from the log",
                                 "&reset -- resets the leaderboard",
-                                "clrl -- deletes and clears all the users from the log"]
+                                "&clrl -- deletes and clears all the users from the log"]
     isManager = False
     i = ctx.author.roles
     k = 3
