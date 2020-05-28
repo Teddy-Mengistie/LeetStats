@@ -117,6 +117,7 @@ async def leaderboard(ctx):
             c+=1
         board+="```"
         await ctx.channel.send(board)
+        await ctx.channel.send("***Leading : {}***".format(all[0]["_id"]))
 
 
 @client.command(name = "clrl")
