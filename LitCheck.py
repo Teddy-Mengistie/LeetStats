@@ -98,15 +98,14 @@ async def remove(ctx, user):
 
 @client.command(name = "board")
 async def leaderboard(ctx):
-    #Faster way of getting the leaderboard O(n) number of documents
-    all = collection.find().sort("week", -1)
-    board = "```"
-    c = 0;
-    for x in all:
-        board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
-        c+=1
-    board+="```"
-    await ctx.channel.send(board)
+        all = collection.find().sort("week", -1)
+        board = "```{:^75}\n{:>25}{:>25}{:>25}\n".format("***LEADERBOARD***","users", "problems done", "total problems done")
+        c = 0;
+        for x in all:
+            board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
+            c+=1
+        board+="```"
+        await ctx.channel.send(board)
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
@@ -122,16 +121,6 @@ async def clear(ctx, amount=10):
     else:
         await ctx.channel.purge(limit = 50)
 
-#-------------------------
-#-------update data-------
-#-------------------------
-def in5sec():
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
-    Timer(5, in5sec)
-in5sec()
 
 @client.command(name = "help",pass_context=True)
 async def help(ctx):
