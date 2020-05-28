@@ -31,16 +31,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.channel.send(random.choice(messages))
         await help(ctx)
-#-------------------------
-#-------update data-------
-#-------------------------
-def in5sec():
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
-    Timer(5, in5sec)
-in5sec()
+
 #-------------------------
 #-------commands----------
 #-------------------------
@@ -66,6 +57,17 @@ def problems(user_name):
         return int(num_probs[begin: end].strip())
     else:
         return -1
+
+#-------------------------
+#-------update data-------
+#-------------------------
+def in5sec():
+    all = collection.find()
+    for x in all:
+        b = x["_id"]
+        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
+    Timer(5, in5sec)
+in5sec()
 
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
