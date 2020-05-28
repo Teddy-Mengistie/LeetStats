@@ -68,7 +68,7 @@ async def reset(ctx):
             collection.update_many({"_id":b},{"$set":{"problems": problems(b)}})
         await ctx.channel.send("```diff\n+Reset Successfully!```")
 
-@client.command(name = "addReq")
+@client.command(name = "addreq")
 async def add_request(ctx, userName):
     m = []
     for r in ctx.channel.guild.roles:
@@ -99,10 +99,10 @@ async def remove(ctx, user):
 @client.command(name = "board")
 async def leaderboard(ctx):
         all = collection.find().sort("week", -1)
-        board = "```{:^75}\n{:^25}{:^25}{:^25}\n".format("***LEADERBOARD***","users", "prob's done", "total")
+        board = "```{:^75}\n{:^16}{:^15}{:^15}\n".format("***LEADERBOARD***","users", "prob's done", "total")
         c = 0;
         for x in all:
-            board += "{}){:>15}{}{:>15}{}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
+            board += "{}){:^15}{}{:^15}{}{:^15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
             c+=1
         board+="```"
         await ctx.channel.send(board)
