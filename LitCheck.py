@@ -112,7 +112,7 @@ async def leaderboard(ctx):
     if(board != "``````"):
         await ctx.channel.send(board)
     else:
-        await ctx.channel.send("```diff\n-If you are a manager use &add<leetcode username>\n+Else use &addReq <leetcode username> to request for the user to be added```")
+        await ctx.channel.send("```diff\n-If you are a manager use &add<leetcode username>\nElse use &addReq <leetcode username> to request for the user to be added```")
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
