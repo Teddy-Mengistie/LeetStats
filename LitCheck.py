@@ -102,7 +102,7 @@ async def leaderboard(ctx):
         board = "```{:^75}\n{:^25}{:^25}{:^25}\n".format("***LEADERBOARD***","users", "prob's done", "total")
         c = 0;
         for x in all:
-            board += "{}){:>15}{}{:^15}{}{:^15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
+            board += "{}){:>15}{}{:>15}{}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
             c+=1
         board+="```"
         await ctx.channel.send(board)
