@@ -110,7 +110,7 @@ async def remove(ctx, user):
 @client.command(name = "board")
 async def leaderboard(ctx):
         all = collection.find().sort("week", -1)
-        board = "```{:^80}\n{:^26}{:^25}{:^25}\n".format("***LEADERBOARD***","users", "prob's done", "total")
+        board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
         c = 0;
         for x in all:
             board += "{:>4}){:^25}{}{:^25}{}{:^25}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
