@@ -13,7 +13,7 @@ db = cluster["Bot"]
 collection = db["Leetcode Users Data"]
 
 #client initiation
-client = commands.Bot(command_prefix = "!")
+client = commands.Bot(command_prefix = "&")
 client.remove_command("help")
 #-------------------------
 #-------events------------
