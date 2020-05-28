@@ -3,10 +3,16 @@ import random
 from discord.ext import commands
 import requests
 from bs4 import BeautifulSoup
-import json
-import os
+import pymongo
+from pymongo import MongoClient
 
-client = commands.Bot(command_prefix = "&")
+#Data base connection initation
+cluster = MongoClient(os.environ['MONGO_CLIENT'])
+db = cluster["Bot"]
+collection = db["Leetcode Users Data"]
+
+#client initiation
+client = commands.Bot(command_prefix = "!")
 client.remove_command("help")
 #-------------------------
 #-------events------------
@@ -52,40 +58,12 @@ def problems(self, user_name):
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
-        users[user]["problems"] = problems(users, user)
-
-async def get_list(ctx, users):
-    names = []
-    probs_week = []
-    probs = []
-    for i in users:
-        names.append(i)
-        j = problems(ctx, i)
-        probs_week.append(j-users[i]["problems"])
-        probs.append(users[i]["problems"])
-    stats = {}
-    for i in range(0, len(names)):
-        stats.update({names[i] : probs_week[i]})
-    stats_sorted = sorted(stats.items(), key=lambda x: x[1], reverse=True)
-    print(stats_sorted)
-    y = list(stats_sorted)
-    try:
-        name, prob = zip(*y)
-        board = "```{}\n".format("Current Week Leaderboard")
-        for i in range(0, len(y)):
-            board += "{}){:>10} {:>10} {:>10}\n".format(i+1, name[i], ":",prob[i])
-        board +="```"
-        await ctx.channel.send(board)
-    except ValueError:
-        isManager = False
-        i = ctx.message.author.roles
-        for j in i:
-            if("leetcode-manager" == j.name):
-                isManager = True
-        if (isManager):
-            await ctx.channel.send("```diff\n-Add users with &add <userName>```")
-        else:
-            await ctx.channel.send("```diff\n-Request to add users with &addReq <userName>```")
+        all = collection.find()
+        for x in all:
+            b = x["_id"]
+            collection.update_many({"_id":b},{"$set":{"week": 0}})
+            collection.update_many({"_id":b},{"$set":{"problems": problems(ctx, b)}})
+        await ctx.channel.send("```diff\n+Reset Successfully!```")
 
 @client.command(name = "addReq")
 async def add_request(ctx, userName):
@@ -102,46 +80,40 @@ async def add_request(ctx, userName):
 @client.command(name = "add")
 @commands.has_role("leetcode-manager")
 async def add(ctx, user):
-        users = {}
-        with open('leetusers.json', 'r') as f:
-            users = json.load(f)
-            f.close()
-        j = problems(ctx, user)
-        if(j!=-1):
-            users[user] = {}
-            users[user]["problems"] = j
-            await ctx.channel.send("```diff\n+Added Successfully!```")
-        else:
-            await ctx.channel.send("```diff\n-Add unsuccessfull :(```")
-        with open('leetusers.json', 'w') as f:
-            json.dump(users, f, indent = 4, sort_keys = True)
+    j = problems(ctx, user)
+    if(j!=-1):
+        collection.insert_one({"_id": user,"username": user,"problems": j, "week":0})
+        await ctx.channel.send("```diff\n+Added Successfully!```")
+    else:
+        await ctx.channel.send("```diff\n-Add unsuccessfull :(```")
+
 
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
 async def remove(ctx, user):
-    with open('leetusers.json', 'r') as f:
-        users = json.load(f)
-        f.close()
-    del users[user]
-    with open('leetusers.json', 'w') as f:
-        json.dump(users, f, indent = 4, sort_keys = True)
+    collection.delete_one({"_id":user})
     await ctx.channel.send("```diff\n+Removed Successfully!```")
 
 @client.command(name = "board")
 async def leaderboard(ctx):
-    with open('leetusers.json', 'r') as f:
-        users = json.load(f)
-        f.close()
-    await get_list(ctx, users)
-    with open('leetusers.json', 'w') as f:
-        json.dump(users, f, indent = 4, sort_keys = True)
+    #Updates to current
+    all = collection.find()
+    for x in all:
+        b = x["_id"]
+        collection.update_one({"_id":b},{"$set":{"week": problems(ctx, b) - x["problems"]}})
+    all = collection.find().sort("week", -1)
+    board = "```"
+    c = 0;
+    for x in all:
+        board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"])
+        c+=1
+    board+="```"
+    await ctx.channel.send(board)
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
 async def clr_leet(ctx):
-    users = {}
-    with open('leetusers.json', 'w') as f:
-        json.dump(users, f, indent = 4, sort_keys = True)
+    collection.delete_many({})
     await ctx.channel.send("```diff\n+Cleared Successfully!```")
 
 @client.command(name = "clrm")
@@ -159,7 +131,7 @@ async def help(ctx):
                                 "&addReq <leetcode username> -- Requests one of the managers to add this user to the log",
                                 "&clrm *not required*<specific amount of messages> -- Deleted the amount of messages specified, max = 50, default = 10",
                                 "&add <leetcode username> -- This adds the requested username to the log",
-                                "&remove <leetcode username> -- This removes a user from the log",
+                                "&rm <leetcode username> -- This removes a user from the log",
                                 "&reset -- resets the leaderboard",
                                 "&clrl -- deletes and clears all the users from the log"]
     isManager = False
