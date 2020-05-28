@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import pymongo
 from pymongo import MongoClient
 import os
+import pymongo[srv]
 
 #Data base connection initation
 cluster = MongoClient(os.environ['MONGO_CLIENT'])
