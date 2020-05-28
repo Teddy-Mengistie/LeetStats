@@ -2,5 +2,4 @@ discord
 requests
 bs4
 lxml
-pymongo
-pymongo[srv]
+pymongo[tls,srv]
