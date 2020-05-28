@@ -5,12 +5,14 @@ import requests
 from bs4 import BeautifulSoup
 import pymongo
 from pymongo import MongoClient
-import os
+from threading import Timer
+from threading import Thread
+import threading
+#sync method
 
 #Data base connection initation
 cluster = MongoClient(os.environ['MONGO_CLIENT'])
-db = cluster["Bot"]
-collection = db["Leetcode Users Data"]
+collection = cluster["Bot"]["Leetcode Users Data"]
 
 #client initiation
 client = commands.Bot(command_prefix = "&")
@@ -18,7 +20,6 @@ client.remove_command("help")
 #-------------------------
 #-------events------------
 #-------------------------
-
 @client.event
 async def on_ready():
     print('I am ready.')
@@ -36,14 +37,14 @@ async def on_command_error(ctx, error):
 
 @client.command()
 async def user(ctx, user_name):
-    j = problems(ctx,user_name)
+    j = problems(user_name)
     if(j != -1):
         await ctx.channel.send(f'```{user_name} has solved {j} problems```')
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
         await ctx.channel.send(random.choice(messages))
 
-def problems(self, user_name):
+def problems(user_name):
     my_url = f'http://leetcode.com/{user_name}'
     page = requests.get(my_url)
     soup = BeautifulSoup(page.content, 'lxml')
@@ -63,7 +64,7 @@ async def reset(ctx):
         for x in all:
             b = x["_id"]
             collection.update_many({"_id":b},{"$set":{"week": 0}})
-            collection.update_many({"_id":b},{"$set":{"problems": problems(ctx, b)}})
+            collection.update_many({"_id":b},{"$set":{"problems": problems(b)}})
         await ctx.channel.send("```diff\n+Reset Successfully!```")
 
 @client.command(name = "addReq")
@@ -72,7 +73,7 @@ async def add_request(ctx, userName):
     for r in ctx.channel.guild.roles:
          if(r.name == "leetcode-manager"):
              m = r.members
-    if(problems(ctx, userName) != -1):
+    if(problems(userName) != -1):
         for x in m:
              await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
     else:
@@ -81,13 +82,12 @@ async def add_request(ctx, userName):
 @client.command(name = "add")
 @commands.has_role("leetcode-manager")
 async def add(ctx, user):
-    j = problems(ctx, user)
-    if(j!=-1):
-        collection.insert_one({"_id": user,"username": user,"problems": j, "week":0})
-        await ctx.channel.send("```diff\n+Added Successfully!```")
-    else:
-        await ctx.channel.send("```diff\n-Add unsuccessfull :(```")
-
+        j = problems(user)
+        if(j!=-1):
+            collection.insert_one({"_id": user,"username": user,"problems": j, "week":0})
+            await ctx.channel.send("```diff\n+Added Successfully!```")
+        else:
+            await ctx.channel.send("```diff\n-Add unsuccessfull :(```")
 
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
@@ -97,22 +97,15 @@ async def remove(ctx, user):
 
 @client.command(name = "board")
 async def leaderboard(ctx):
-    #Updates to current
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_one({"_id":b},{"$set":{"week": problems(ctx, b) - x["problems"]}})
+    #Faster way of getting the leaderboard O(n) number of documents
     all = collection.find().sort("week", -1)
     board = "```"
     c = 0;
     for x in all:
-        board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"])
+        board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
         c+=1
     board+="```"
-    if(board != "``````"):
-        await ctx.channel.send(board)
-    else:
-        await ctx.channel.send("```diff\n-If you are a manager use &add<leetcode username>\nElse use &addReq <leetcode username> to request for the user to be added```")
+    await ctx.channel.send(board)
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
@@ -127,6 +120,17 @@ async def clear(ctx, amount=10):
         await ctx.channel.purge(limit=amount)
     else:
         await ctx.channel.purge(limit = 50)
+
+#-------------------------
+#-------update data-------
+#-------------------------
+def in5sec():
+    all = collection.find()
+    for x in all:
+        b = x["_id"]
+        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
+    Timer(5, in5sec)
+in5sec()
 
 @client.command(name = "help",pass_context=True)
 async def help(ctx):
