@@ -109,7 +109,7 @@ async def leaderboard(ctx):
         board += "{}){:>15}{:>10}{:>15}{:>10}{:>15}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"])
         c+=1
     board+="```"
-    if(board != "``````")
+    if(board != "``````"):
         await ctx.channel.send(board)
     else:
         await ctx.channel.send("```diff\n-If you are a manager use \n&add<leetcode username>\nElse use &addReq <leetcode username> to request for the user to be added```")
