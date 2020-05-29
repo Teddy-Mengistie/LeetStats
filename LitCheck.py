@@ -23,17 +23,7 @@ collection = cluster["Bot"]["Leetcode Users Data"]
 @client.event
 async def on_ready():
     print('I am ready.')
-
-@client.event
-async def on_typing(channel, user, when):
-    s = time.perf_counter()
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
-    f = time.perf_counter()
-    print("done in {}s".format(f-s))
-
+    
 @client.event
 async def on_command_error(ctx, error):
     messages = ["```diff\n-try again```", "```diff\n-misspelled something?```", "```diff\n-check again```"]
