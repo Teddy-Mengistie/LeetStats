@@ -17,10 +17,9 @@ cluster = MongoClient(os.environ['MONGO_CLIENT'])
 collection = cluster["Bot"]["Leetcode Users Data"]
 
 
-while(True){
+while(True):
     all = collection.find()
     for x in all:
         b = x["_id"]
         collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
     time.sleep(60)
-}
