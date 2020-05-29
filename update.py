@@ -36,4 +36,4 @@ while(True):
     for x in all:
         b = x["_id"]
         collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
-    time.sleep(60)
+    time.sleep(30)
