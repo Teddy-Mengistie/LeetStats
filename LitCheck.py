@@ -16,14 +16,15 @@ import time
 cluster = MongoClient(os.environ['MONGO_CLIENT'])
 collection = cluster["Bot"]["Leetcode Users Data"]
 
-
+client = commands.Bot(command_prefix = "&")
+client.remove_command("help")
 #-------------------------
 #-------events------------
 #-------------------------
 @client.event
 async def on_ready():
     print('I am ready.')
-    
+
 @client.event
 async def on_command_error(ctx, error):
     messages = ["```diff\n-try again```", "```diff\n-misspelled something?```", "```diff\n-check again```"]
