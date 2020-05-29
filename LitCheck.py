@@ -52,9 +52,11 @@ def problems(user_name):
     #num problems done/1453
     num_probs = soup.get_text().replace("\n", "")
     if("/" in num_probs):
-        begin = num_probs.find("/")-4
-        end = num_probs.find("/")
-        return int(num_probs[begin: end].strip())
+        begin = num_probs.find("Progress")+8
+        end = num_probs.find("Solved Question")
+        ret = num_probs[begin: end].strip()
+        end = ret.find("/")
+        return int(ret[0:end])
     else:
         return -1
 
@@ -72,12 +74,12 @@ in5sec()
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
-        all = collection.find()
-        for x in all:
-            b = x["_id"]
-            collection.update_many({"_id":b},{"$set":{"week": 0}})
-            collection.update_many({"_id":b},{"$set":{"problems": problems(b)}})
-        await ctx.channel.send("```diff\n+Reset Successfully!```")
+    all = collection.find()
+    for x in all:
+        b = x["_id"]
+        collection.update_many({"_id":b},{"$set":{"problems": x["problems"] + x["week"]}})
+        collection.update_many({"_id":b},{"$set":{"week": 0}})
+    await ctx.channel.send("```diff\n+Reset Successfully!```")
 
 @client.command(name = "addreq")
 async def add_request(ctx, userName):
