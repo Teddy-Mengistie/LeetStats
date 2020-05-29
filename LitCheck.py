@@ -9,21 +9,30 @@ from threading import Timer
 from threading import Thread
 import threading
 import os
+import time
 #sync method
 
 #Data base connection initation
 cluster = MongoClient(os.environ['MONGO_CLIENT'])
 collection = cluster["Bot"]["Leetcode Users Data"]
 
-#client initiation
-client = commands.Bot(command_prefix = "&")
-client.remove_command("help")
+
 #-------------------------
 #-------events------------
 #-------------------------
 @client.event
 async def on_ready():
     print('I am ready.')
+
+@client.event
+async def on_typing(channel, user, when):
+    s = time.perf_counter()
+    all = collection.find()
+    for x in all:
+        b = x["_id"]
+        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
+    f = time.perf_counter()
+    print("done in {}s".format(f-s))
 
 @client.event
 async def on_command_error(ctx, error):
@@ -60,28 +69,18 @@ def problems(user_name):
     else:
         return -1
 
-#-------------------------
-#-------update data-------
-#-------------------------
-def in5sec():
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_one({"_id":b},{"$set":{"week": problems(b) - x["problems"]}})
-    Timer(5, in5sec)
-in5sec()
 
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
-    all = collection.find()
-    for x in all:
-        b = x["_id"]
-        collection.update_many({"_id":b},{"$set":{"problems": x["problems"] + x["week"]}})
-        collection.update_many({"_id":b},{"$set":{"week": 0}})
-    await ctx.channel.send("```diff\n+Reset Successfully!```")
+        all = collection.find()
+        for x in all:
+            b = x["_id"]
+            collection.update_many({"_id":b},{"$set":{"problems": x["problems"] + x["week"]}})
+            collection.update_many({"_id":b},{"$set":{"week": 0}})
+        await ctx.channel.send("```diff\n+Reset Successfully!```")
 
-@client.command(name = "addreq")
+@client.command(name = "addReq")
 async def add_request(ctx, userName):
     m = []
     for r in ctx.channel.guild.roles:
@@ -111,18 +110,14 @@ async def remove(ctx, user):
 
 @client.command(name = "board")
 async def leaderboard(ctx):
-        all = collection.find().sort("week", -1)
-        board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
-        c = 0;
-        for x in all:
-            board += "{:>4}){:^25}{}{:^25}{}{:^22}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
-            c+=1
-        board+="```"
-        await ctx.channel.send(board)
-        for x in all:
-            await ctx.channel.send("**Leading : {}**".format(x["_id"]))
-            break
-
+    all = collection.find().sort("week", -1)
+    board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
+    c = 0;
+    for x in all:
+        board += "{:>4}){:^25}{}{:^25}{}{:^22}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
+        c+=1
+    board+="```"
+    await ctx.channel.send(board)
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
@@ -137,7 +132,6 @@ async def clear(ctx, amount=10):
         await ctx.channel.purge(limit=amount)
     else:
         await ctx.channel.purge(limit = 50)
-
 
 @client.command(name = "help",pass_context=True)
 async def help(ctx):
