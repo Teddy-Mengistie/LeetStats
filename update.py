@@ -1,13 +1,9 @@
 import discord
-import random
 from discord.ext import commands
 import requests
 from bs4 import BeautifulSoup
 import pymongo
 from pymongo import MongoClient
-from threading import Timer
-from threading import Thread
-import threading
 import os
 import time
 #sync method
