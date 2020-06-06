@@ -59,7 +59,25 @@ def problems(user_name):
         return int(ret[0:end])
     else:
         return -1
+@client.command(name = "lead")
+async def leading(ctx):
+    update_message = discord.Embed(colour = random.randint(0, 0xffffff))
+    all = collection.find().sort("week", -1)
+    x = all.next()
+    emojis = ["\U0001F9E0", "\U0001F929", "\U0001F61D", "\U0001F92F", "\U0001F973", "\U0001F60E", "\U0001F632", "\U0001F62F", "\U0001F62E"]
+    e = random.choice(emojis)
+    update_message.set_thumbnail(url = avtr(x["_id"]))
+    update_message.set_author(name = f'************{e} \"{x["_id"]}\" {e}************')
+    update_message.add_field(name = 'Problems done', value = x["week"], inline = True)
+    update_message.add_field(name = 'Lifetime Problems Done', value = x["problems"], inline = True)
+    await ctx.channel.send(embed = update_message)
 
+def avtr(user):
+    my_url = f'http://leetcode.com/{user}'
+    page = requests.get(my_url)
+    soup = BeautifulSoup(page.content, 'lxml')
+    num_probs = soup.find(alt = "user avatar")
+    return num_probs["src"]
 
 @client.command(name = "reset")
 @commands.has_role("leetcode-manager")
@@ -129,6 +147,7 @@ async def help(ctx):
     commands_and_description = ["&user <leetcode username> -- Quick info on the amount of leetcode problems done",
                                 "&board -- This shows the current leaderboard rated by the amount of problems done in the current week",
                                 "&addReq <leetcode username> -- Requests one of the managers to add this user to the log",
+                                "&lead -- shows a card of the stats of the currently leading user in the competition",
                                 "&clrm *not required*<specific amount of messages> -- Deleted the amount of messages specified, max = 50, default = 10",
                                 "&add <leetcode username> -- This adds the requested username to the log",
                                 "&rm <leetcode username> -- This removes a user from the log",
@@ -136,7 +155,7 @@ async def help(ctx):
                                 "&clrl -- deletes and clears all the users from the log"]
     isManager = False
     i = ctx.message.author.roles
-    k = 3
+    k = 4
     for j in i:
         if("leetcode-manager" == j.name):
             isManager = True
