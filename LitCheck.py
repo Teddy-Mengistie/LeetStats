@@ -124,14 +124,22 @@ async def remove(ctx, user):
 
 @client.command(name = "board")
 async def leaderboard(ctx):
+    mess = discord.Embed(colour = random.randint(0, 0xffffff))
+    mess.set_author(name = 'Updating...')
+    updating = False
     all = collection.find().sort("week", -1)
     board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
     c = 0;
     for x in all:
+        if(x["week"] < 0 or x["problems"] + x["week"] < 0):
+            updating = True
         board += "{:>4}){:^25}{}{:^25}{}{:^22}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
         c+=1
     board+="```"
-    await ctx.channel.send(board)
+    if(not updating):
+        await ctx.channel.send(board)
+    else:
+        await ctx.channel.send(embed = mess)
 
 @client.command(name = "clrl")
 @commands.has_role("leetcode-manager")
