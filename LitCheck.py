@@ -40,7 +40,11 @@ async def on_command_error(ctx, error):
 async def user(ctx, user_name):
     j = problems(user_name)
     if(j != -1):
-        await ctx.channel.send(f'```{user_name} has solved {j} problems```')
+        message = discord.Embed(colour = random.randint(0, 0xffffff))
+        message.set_thumbnail(url = avtr(user_name))
+        message.set_author(name = user_name.capitalize().replace("_", "").replace("-", ""))
+        message.add_field(name = 'Completed Problems', value = j)
+        await ctx.channel.send(embed = message)
     else:
         messages = ["```try again```", "```incorrect username```", "```you maybe misspelled something```", "```check again```", "```username... is not responding```"]
         await ctx.channel.send(random.choice(messages))
@@ -59,6 +63,7 @@ def problems(user_name):
         return int(ret[0:end])
     else:
         return -1
+
 @client.command(name = "lead")
 async def leading(ctx):
     update_message = discord.Embed(colour = random.randint(0, 0xffffff))
