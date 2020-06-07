@@ -74,7 +74,7 @@ async def leading(ctx):
     update_message.set_thumbnail(url = avtr(x["_id"]))
     update_message.set_author(name = f'************{e} \"{x["_id"]}\" {e}************')
     update_message.add_field(name = 'Problems done', value = x["week"], inline = True)
-    update_message.add_field(name = 'Lifetime Problems Done', value = x["problems"], inline = True)
+    update_message.add_field(name = 'Lifetime Problems Done', value = x["problems"]+x["week"], inline = True)
     await ctx.channel.send(embed = update_message)
 
 def avtr(user):
