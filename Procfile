@@ -1,2 +1,1 @@
-  worker: python LitCheck.py
-  worker1: python update.py
+  worker: python LitCheck.py & python update.py
