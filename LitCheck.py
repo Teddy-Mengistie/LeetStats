@@ -9,7 +9,7 @@ import json
 #sync method
 
 #Data base connection initation
-cluster = MongoClient('MONGODB SERVER ADDRESS')
+cluster = MongoClient('MONGODB ADDRESS HERE')
 collection = cluster["Bot"]["Leetcode Users Data"]
 
 client = commands.Bot(command_prefix = "&")
@@ -108,22 +108,14 @@ async def remove(ctx, user):
 
 @client.command(name = "board")
 async def leaderboard(ctx):
-    mess = discord.Embed(colour = random.randint(0, 0xffffff))
-    mess.set_author(name = 'Updating...')
-    updating = False
     all = collection.find().sort("week", -1)
     board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
     c = 0;
     for x in all:
-        if(x["week"] < 0 or x["problems"] + x["week"] < 0):
-            updating = True
         board += "{:>4}){:^25}{}{:^25}{}{:^22}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
         c+=1
     board+="```"
-    if(not updating):
-        await ctx.channel.send(board)
-    else:
-        await ctx.channel.send(embed = mess)
+    await ctx.channel.send(board)
 
 @client.command(name = "clr")
 @commands.has_role("leetcode-manager")
@@ -135,16 +127,18 @@ async def clr_leet(ctx):
 
 @client.command(name = "help", pass_context=True)
 async def help(ctx):
-    commands_and_description = ["&user <leetcode username> -- Quick info on the amount of leetcode problems done",
-                                "&board -- This shows the current leaderboard rated by the amount of problems done in the current week",
-                                "&request <leetcode username> -- Requests one of the managers to add this user to the log",
-                                "&update -- updates leaderboard to current stats",
-                                "&add <leetcode username> -- This adds the requested username to the log",
-                                "&rm <leetcode username> -- This removes a user from the log",
-                                "&reset -- resets the leaderboard",
+    commands_and_description = ["&user <leetcode username> -- total leetcode problems done of this user",
+                                "&board -- leaderboard ranked by problems done after reset",
+                                "&request <leetcode username> -- request one of the managers to add this user to the leaderboard",
+                                "&update -- update leaderboard to the current stats",
+                                "&add <leetcode username> -- add the username to the leaderboard",
+                                "&rm <leetcode username> -- remove a user from the leaderboard",
+                                "&reset -- reset the leaderboard",
                                 "&clr -- deletes and clears all the users from the leaderboard"]
-    message = "```Java\n"
+    message = "```\n"
     for x in commands_and_description:
-        await ctx.channel.send(x + "\n")
+        message += x + "\n"
+    message += "```"
+    await ctx.channel.send(message)
 
-client.run('BOT CODE HERE')
+client.run('BOT TOKEN HERE')
