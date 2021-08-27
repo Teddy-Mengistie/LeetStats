@@ -1,6 +1,6 @@
 # Leetcode Bot
 - command prefix = "&amp;"
-- requires a Mongo database and a discord bot token and thats all :)
+- requires a Mongo database and a discord bot token
 - requires a role named "leetcode-manager" for your server (leetcode-managers can use commands 'add', 'rm', 'reset', and 'clr')
 ---
 #### Commands
