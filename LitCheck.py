@@ -77,16 +77,7 @@ async def reset(ctx):
         collection.update_many({"_id":b},{"$set":{"problems": x["problems"] + x["week"]}})
         collection.update_many({"_id":b},{"$set":{"week": 0}})
     await ctx.channel.send("```diff\n+ Reset Successfully!```")
-
-@client.command(name = "request")
-async def add_request(ctx, userName):
-    m = []
-    for r in ctx.channel.guild.roles:
-        if(r.name == "leetcode-manager"):
-            m = r.members
-    for x in m:
-        await x.send(f'```diff\n-{ctx.author.name.capitalize()} would like to add {userName} to the list!```')
-
+    
 @client.command(name = "add")
 @commands.has_role("leetcode-manager")
 async def add(ctx, user):
@@ -106,11 +97,11 @@ async def remove(ctx, user):
 @client.command(name = "board")
 async def leaderboard(ctx):
     all = collection.find().sort("week", -1)
-    board = "```{:^74}\n{:^30}{:^25}{:^19}\n".format("***LEADERBOARD***","users", "prob's done", "total")
-    c = 0;
+    board = "```{:^78}\n{:^26}{:^26}{:^26}\n".format("LEADERBOARD","users", "prob's done", "total")
+    place = 1;
     for x in all:
-        board += "{:>4}){:^25}{}{:^25}{}{:^22}\n".format(c+1, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
-        c+=1
+        board += "{}{:^25}{}{:^25}{}{:^25}\n".format(place, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
+        place += 1
     board+="```"
     await ctx.channel.send(board)
 
@@ -126,7 +117,6 @@ async def clr_leet(ctx):
 async def help(ctx):
     commands_and_description = ["&user <leetcode username> -- total leetcode problems done of this user",
                                 "&board -- leaderboard ranked by problems done after reset",
-                                "&request <leetcode username> -- request one of the managers to add this user to the leaderboard",
                                 "&update -- update leaderboard to the current stats",
                                 "&add <leetcode username> -- add the username to the leaderboard",
                                 "&rm <leetcode username> -- remove a user from the leaderboard",
