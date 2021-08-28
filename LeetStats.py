@@ -6,12 +6,12 @@ from bs4 import BeautifulSoup
 import pymongo
 from pymongo import MongoClient
 import json
-#sync method
 
 #Data base connection initation
 cluster = MongoClient('MONGODB ADDRESS HERE')
 collection = cluster["Bot"]["Leetcode Users Data"]
 
+#Discord
 client = commands.Bot(command_prefix = "&")
 client.remove_command("help")
 #-------------------------
@@ -32,14 +32,14 @@ async def on_command_error(ctx, error):
 #-------helper------------
 #-------------------------
 
-def problems(user_name):
+async def problems(user_name):
     my_url = f'http://leet-api2.herokuapp.com/users/{user_name}'
     page = requests.get(my_url) 
     soup = BeautifulSoup(page.content, 'html.parser')
     num_probs = soup.get_text().replace("\n", "")
     
     # 'Application Error'
-    if(num_probs.index('{') == -1):
+    if(num_probs.index('{"total":') == -1):
         return -1
         
     problems_solved = json.loads(num_probs)
@@ -51,7 +51,7 @@ def problems(user_name):
     
 @client.command()
 async def user(ctx, user_name):
-    j = problems(user_name)
+    j = await problems(user_name)
     message = discord.Embed(colour = random.randint(0, 0xffffff))
     message.set_author(name = user_name.capitalize().replace("_", "").replace("-", ""))
     message.add_field(name = 'Completed Problems', value = j)
@@ -63,36 +63,32 @@ async def update(ctx):
     count = 0
     for x in all:
         user = x["_id"]
-        collection.update_many({"_id":user},{"$set":{"week": problems(user) - x["problems"]}})
+        p = await problems(user)
+        collection.update_many({"_id":user},{"$set":{"week": p - x["problems"]}},{"$set":{"problems": p}})
         message = f'Updated user {user}'
         print(message)
     await ctx.channel.send("```diff\n+ Done!```")
     
-@client.command(name = "reset")
+@client.command()
 @commands.has_role("leetcode-manager")
 async def reset(ctx):
     all = collection.find()
     for x in all:
-        b = x["_id"]
-        collection.update_many({"_id":b},{"$set":{"problems": x["problems"] + x["week"]}})
-        collection.update_many({"_id":b},{"$set":{"week": 0}})
+        user = x["_id"]
+        collection.update_many({"_id":user},{"$set":{"problems": await problems(user)}})
+        collection.update_many({"_id":user},{"$set":{"week": 0}})
     await ctx.channel.send("```diff\n+ Reset Successfully!```")
     
-@client.command(name = "add")
-@commands.has_role("leetcode-manager")
+@client.command()
 async def add(ctx, user):
-        j = problems(user)
-        if(j!=-1):
-            collection.insert_one({"_id": user,"username": user,"problems": j, "week":0})
-            await ctx.channel.send("```diff\n+ Added Successfully!```")
-        else:
-            await ctx.channel.send("```diff\n- Add unsuccessfull :(```")
+        collection.insert_one({"_id": user,"username": user,"problems": -1, "week":0})
+        await ctx.channel.send(f'```diff\n+ Added {user}!```')
 
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
 async def remove(ctx, user):
     collection.delete_one({"_id":user})
-    await ctx.channel.send("```diff\n+ Removed Successfully!```")
+    await ctx.channel.send(f'```diff\n+ Removed {user}!```')
 
 @client.command(name = "board")
 async def leaderboard(ctx):
@@ -120,7 +116,7 @@ async def help(ctx):
                                 "&update -- update leaderboard to the current stats",
                                 "&add <leetcode username> -- add the username to the leaderboard",
                                 "&rm <leetcode username> -- remove a user from the leaderboard",
-                                "&reset -- reset the leaderboard",
+                                "&reset -- reset the leaderboard to original",
                                 "&clr -- deletes and clears all the users from the leaderboard"]
     message = "```\n"
     for x in commands_and_description:
