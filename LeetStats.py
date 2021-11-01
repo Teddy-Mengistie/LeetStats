@@ -52,6 +52,9 @@ async def problems(user_name):
 @client.command()
 async def user(ctx, user_name):
     j = await problems(user_name)
+    if (j == -1):
+        await ctx.channel.send("```Not Valid!```")
+        return
     message = discord.Embed(colour = random.randint(0, 0xffffff))
     message.set_author(name = user_name.capitalize().replace("_", "").replace("-", ""))
     message.add_field(name = 'Completed Problems', value = j)
@@ -64,6 +67,11 @@ async def update(ctx):
     for x in all:
         user = x["_id"]
         p = await problems(user)
+        if(p == -1):
+            #remove the user from the database
+            collection.delete_one({"_id":user})
+            await ctx.channel.send(f'```{user} was invalid, and was removed!```')
+            continue
         collection.update_many({"_id":user},{"$set":{"week": p - x["problems"]}},{"$set":{"problems": p}})
         message = f'Updated user {user}'
         print(message)
@@ -75,6 +83,12 @@ async def reset(ctx):
     all = collection.find()
     for x in all:
         user = x["_id"]
+        p = await problems(user)
+        if(p == -1):
+            #remove the user from the database
+            collection.delete_one({"_id":user})
+            await ctx.channel.send(f'```{user} was invalid, and was removed!```')
+            continue
         collection.update_many({"_id":user},{"$set":{"problems": await problems(user)}})
         collection.update_many({"_id":user},{"$set":{"week": 0}})
     await ctx.channel.send("```diff\n+ Reset Successfully!```")
@@ -82,7 +96,7 @@ async def reset(ctx):
 @client.command()
 async def add(ctx, user):
         collection.insert_one({"_id": user,"username": user,"problems": -1, "week":0})
-        await ctx.channel.send(f'```diff\n+ Added {user}!```')
+        await ctx.channel.send(f'```diff\n+ Added {user}! Recommended: use the update method after adding any user.```')
 
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
