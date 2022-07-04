@@ -2,18 +2,31 @@ import discord
 import random
 from discord.ext import commands
 import requests
-from bs4 import BeautifulSoup
-import pymongo
-from pymongo import MongoClient
 import json
+import pymongo
 
 #Data base connection initation
-cluster = MongoClient('MONGODB ADDRESS HERE')
-collection = cluster["Bot"]["Leetcode Users Data"]
 
-#Discord
-client = commands.Bot(command_prefix = "&")
+"""
+Database explanation:
+    Fields:
+        - _id : the name of the user
+        - week: the amount of problems done by the user since the last reset of the leaderboard
+        - problems: the total amount of problems done by the user
+"""
+password = 'MONGODB PASSWORD HERE'
+cluster = pymongo.MongoClient('MONGODB ADDRESS'.format(password),
+                      server_api = pymongo.server_api.ServerApi('1'))
+collection = cluster["DATABASE NAME"]["COLLECTION NAME"]
+
+# Discord
+# prefix for the bot
+command_prefix = "."
+client = commands.Bot(command_prefix = command_prefix)
 client.remove_command("help")
+
+# Global variables
+messages = ["```diff\n- try again```", "```diff\n- misspelled something?```", "```diff\n- Something is not right```"]
 #-------------------------
 #-------events------------
 #-------------------------
@@ -21,60 +34,72 @@ client.remove_command("help")
 async def on_ready():
     print('Ready!')
 
+"""
+If the discord user enters a wrong command,
+we send an error message followed by the list of valid commands.
+"""
 @client.event
 async def on_command_error(ctx, error):
-    messages = ["```diff\n- try again```", "```diff\n- misspelled something?```", "```diff\n- check again```"]
+    
     if isinstance(error, commands.CommandNotFound):
         await ctx.channel.send(random.choice(messages))
         await help(ctx)
 
 #-------------------------
-#-------helper------------
+#---------helpers---------
 #-------------------------
 
+"""
+Connects with {https://leetcode.com/graphql/} by sending a post request 
+with the query string that is required. We get back a JSON format data 
+of the user's stats. This method returns the all time problems done.
+"""
 async def problems(user_name):
-    my_url = f'http://leet-api2.herokuapp.com/users/{user_name}'
-    page = requests.get(my_url) 
-    soup = BeautifulSoup(page.content, 'html.parser')
-    num_probs = soup.get_text().replace("\n", "")
-    
-    # 'Application Error'
-    if(num_probs.index('{"total":') == -1):
+    # query string to connect to leetcode and get the user problems solved
+    # DONT CHANGE, VERY IMPORTANT
+    query = {"query":"\n    query userProblemsSolved($username: String!) {\n  allQuestionsCount {\n    difficulty\n    count\n  }\n  matchedUser(username: $username) {\n    problemsSolvedBeatsStats {\n      difficulty\n      percentage\n    }\n    submitStatsGlobal {\n      acSubmissionNum {\n        difficulty\n        count\n      }\n    }\n  }\n}\n    ","variables":{"username":'{}'.format(user_name)}}
+    url = "https://leetcode.com/graphql/"
+    r = requests.post(url, json = query)
+    data = json.loads(r.text)
+    data = data["data"]["matchedUser"]
+    if (data is None):
         return -1
-        
-    problems_solved = json.loads(num_probs)
-    return int(problems_solved["total"])
-    
+    else:
+        return data["submitStatsGlobal"]["acSubmissionNum"][0]["count"] # returns all the problems solved
+
 #-------------------------
-#-------commands----------
+#---------commands--------
 #-------------------------
-    
+
+"""
+Sends an embed message containing the amount of problems done by this user.
+"""
 @client.command()
 async def user(ctx, user_name):
     j = await problems(user_name)
-    if (j == -1):
-        await ctx.channel.send("```Not Valid!```")
-        return
-    message = discord.Embed(colour = random.randint(0, 0xffffff))
-    message.set_author(name = user_name.capitalize().replace("_", "").replace("-", ""))
-    message.add_field(name = 'Completed Problems', value = j)
+    color = random.randint(0, 0xffffff)
+    message = discord.Embed(colour = color)
+    if(j > -1): # user does exist
+        message.set_author(name = user_name.capitalize().replace("_", " ").replace("-", " "))
+        message.add_field(name = 'Completed Problems', value = j)
+    else: # user does not exist
+        message.set_author(name = "Invalid User")
     await ctx.channel.send(embed = message)
-    
+
+"""
+Loops through the database to update the week field
+"""
 @client.command()
 async def update(ctx):
     all = collection.find()
-    count = 0
     for x in all:
         user = x["_id"]
         p = await problems(user)
-        if(p == -1):
-            #remove the user from the database
-            collection.delete_one({"_id":user})
-            await ctx.channel.send(f'```{user} was invalid, and was removed!```')
-            continue
-        collection.update_many({"_id":user},{"$set":{"week": p - x["problems"]}},{"$set":{"problems": p}})
-        message = f'Updated user {user}'
-        print(message)
+        if (p >= 0):
+            collection.update_many({"_id":user},{"$set":{"week": p - x["problems"]}})
+            print(f'Updated {user}\'s stats')
+        else: 
+            print(f'Problem updating {user}\'s stats')
     await ctx.channel.send("```diff\n+ Done!```")
     
 @client.command()
@@ -83,31 +108,46 @@ async def reset(ctx):
     all = collection.find()
     for x in all:
         user = x["_id"]
-        p = await problems(user)
-        if(p == -1):
-            #remove the user from the database
-            collection.delete_one({"_id":user})
-            await ctx.channel.send(f'```{user} was invalid, and was removed!```')
-            continue
         collection.update_many({"_id":user},{"$set":{"problems": await problems(user)}})
         collection.update_many({"_id":user},{"$set":{"week": 0}})
     await ctx.channel.send("```diff\n+ Reset Successfully!```")
-    
+
+"""
+Adds a new user to the database, sends error message if user is nonexistent
+"""
 @client.command()
 async def add(ctx, user):
-        collection.insert_one({"_id": user,"username": user,"problems": -1, "week":0})
-        await ctx.channel.send(f'```diff\n+ Added {user}! Recommended: use the update method after adding any user.```')
+    res = await problems(user)
+    if(len(list(collection.find({"_id" : user}))) <= 0 and res >= 0):
+        collection.insert_one({"_id": user, "problems": await problems(user), "week":0})
+        await ctx.channel.send(f'```diff\n+ Added {user}!```')
+    else:
+        await ctx.channel.send(f'```diff\n- Could not add {user}!```')
 
+"""
+If the user exists in the database, removes them from it. If the user
+is already removed it notifies the users by sending an error message.
+Required role : leetcode-manager
+"""
 @client.command(name = "rm")
 @commands.has_role("leetcode-manager")
 async def remove(ctx, user):
+    if(len(list(collection.find({"_id" : user}))) <= 0):
+        await ctx.channel.send(f'```diff\n- {user} already removed!```')
+        return
     collection.delete_one({"_id":user})
     await ctx.channel.send(f'```diff\n+ Removed {user}!```')
 
+"""
+A string-format generated leaderboard will be sent into the chat that the
+command was envoked in. It is sorted by the amount of problems that a user
+has done since the last reset, and also secondarily sorted by the all time
+problems done by the user.
+"""
 @client.command(name = "board")
 async def leaderboard(ctx):
-    all = collection.find().sort("week", -1)
-    board = "```{:^78}\n{:^26}{:^26}{:^26}\n".format("LEADERBOARD","users", "prob's done", "total")
+    all = collection.find().sort([('week', -1), ('problems', -1)])
+    board = "```{:^78}\n{:^26}{:^26}{:^26}\n".format("LEADERBOARD","users", "done", "total")
     place = 1;
     for x in all:
         board += "{}{:^25}{}{:^25}{}{:^25}\n".format(place, x["_id"], ":", x["week"], ":", x["problems"] + x["week"])
@@ -115,27 +155,33 @@ async def leaderboard(ctx):
     board+="```"
     await ctx.channel.send(board)
 
+"""
+Deletes every user in the database.
+Required role : leetcode-manager
+"""
 @client.command(name = "clr")
 @commands.has_role("leetcode-manager")
 async def clr_leet(ctx):
     collection.delete_many({})
     await ctx.channel.send("```diff\n+ Cleared Successfully!```")
 
-
-
+"""
+Sends the list of the commands in the chat that help was called in.
+"""
 @client.command(name = "help", pass_context=True)
 async def help(ctx):
-    commands_and_description = ["&user <leetcode username> -- total leetcode problems done of this user",
-                                "&board -- leaderboard ranked by problems done after reset",
-                                "&update -- update leaderboard to the current stats",
-                                "&add <leetcode username> -- add the username to the leaderboard",
-                                "&rm <leetcode username> -- remove a user from the leaderboard",
-                                "&reset -- reset the leaderboard to original",
-                                "&clr -- deletes and clears all the users from the leaderboard"]
+    # the brackets will be replaced by the command prefix in the for loop after the array
+    commands_and_description = ['{}user <leetcode username> -- total leetcode problems done of this user',
+                                '{}board -- leaderboard ranked by problems done after reset',
+                                '{}update -- update leaderboard to the current stats',
+                                '{}add <leetcode username> -- add the username to the leaderboard',
+                                '{}rm <leetcode username> -- remove a user from the leaderboard',
+                                '{}reset -- reset the leaderboard to original',
+                                '{}clr -- deletes and clears all the users from the leaderboard']
     message = "```\n"
     for x in commands_and_description:
-        message += x + "\n"
+        message += x.format(command_prefix) + "\n"
     message += "```"
     await ctx.channel.send(message)
 
-client.run('BOT TOKEN HERE')
+client.run("DISCORD BOT TOKEN HERE")
