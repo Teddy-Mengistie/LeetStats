@@ -7,16 +7,16 @@
 cluster = MongoClient('MONGODB ADDRESS HERE')
 ```
 ```py
-client.run('BOT TOKEN HERE')
+client.run('DISCORD BOT TOKEN HERE')
 ```
 
 - Role in discord named "leetcode-manager" for your server (leetcode-managers can use commands 'add', 'rm', 'reset', and 'clr')
 
 ---
 #### Commands
-##### prefix is "&amp;" (can be changed on line: 15)
+##### prefix is "." (can be changed on line: 23)
 ```py 
-client = commands.Bot(command_prefix = "&")
+command_prefix = "."
 ```
 ```
 - user (leetcode username) -- total leetcode problems done of this user
