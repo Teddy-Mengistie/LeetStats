@@ -172,7 +172,7 @@ the last weekly leetcode competition. Data might not be accurate because
 of leetcode. :(
 """
 @client.command()
-async def comp(ctx):
+async def weekly(ctx):
     all = collection.find().sort([('contest', 1)])
     board = "```{:^52}\n{:^26}{:^26}\n".format("WEEKLY CONTEST LEADERBOARD","users", "ranking")
     place = 1;
