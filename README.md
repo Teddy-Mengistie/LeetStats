@@ -1,5 +1,5 @@
 # LeetStats
-#### Discord bot for retrieving leetcode user statistics. The program currently uses less than 3% of all the data provided, which makes this a potential huge project in the future. This bot is currently very functional and can be used to host competitions amongst leetcode users.
+#### The program currently uses less than 3% of all the data provided, which makes this a potential huge project in the future. This bot is currently very functional and can be used to host competitions amongst leetcode users.
 
 ### NEW UPDATES
 - New leaderboard where users are ranked on how they did on the last weekly contest hosted by Leetcode.com
