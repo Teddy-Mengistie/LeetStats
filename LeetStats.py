@@ -26,7 +26,7 @@ client = commands.Bot(command_prefix = command_prefix)
 client.remove_command("help")
 
 # Global variables
-messages = ["```diff\n- try again```", "```diff\n- misspelled something?```", "```diff\n- Something is not right```"]
+messages = ["```diff\n- Try again```", "```diff\n- Misspelled something?```", "```diff\n- Something is not right```"]
 #-------------------------
 #-------events------------
 #-------------------------
@@ -56,16 +56,25 @@ of the user's stats. This method returns the all time problems done.
 """
 async def problems(user_name):
     # query string to connect to leetcode and get the user problems solved
-    # DONT CHANGE, VERY IMPORTANT
     query = {"query":"\n    query userProblemsSolved($username: String!) {\n  allQuestionsCount {\n    difficulty\n    count\n  }\n  matchedUser(username: $username) {\n    problemsSolvedBeatsStats {\n      difficulty\n      percentage\n    }\n    submitStatsGlobal {\n      acSubmissionNum {\n        difficulty\n        count\n      }\n    }\n  }\n}\n    ","variables":{"username":'{}'.format(user_name)}}
     url = "https://leetcode.com/graphql/"
     r = requests.post(url, json = query)
     data = json.loads(r.text)
     data = data["data"]["matchedUser"]
-    if (data is None):
-        return -1
-    else:
-        return data["submitStatsGlobal"]["acSubmissionNum"][0]["count"] # returns all the problems solved
+    return -1 if data is None else int(data["submitStatsGlobal"]["acSubmissionNum"][0]["count"])  # returns all the problems solved
+
+"""
+Connects with {https://leetcode.com/graphql/} by sending a post request 
+with the query string that is required. We get back a JSON format data 
+of the user's contest stats. This method returns the last contest rank.
+"""
+async def contest(user_name):
+    query = {"query":"\n    query userContestRankingInfo($username: String!) {\n  userContestRanking(username: $username) {\n    attendedContestsCount\n    rating\n    globalRanking\n    totalParticipants\n    topPercentage\n    badge {\n      name\n    }\n  }\n  userContestRankingHistory(username: $username) {\n    attended\n    trendDirection\n    problemsSolved\n    totalProblems\n    finishTimeInSeconds\n    rating\n    ranking\n    contest {\n      title\n      startTime\n    }\n  }\n}\n    ","variables":{"username":'{}'.format(user_name)}}
+    url = "https://leetcode.com/graphql/"
+    r = requests.post(url, json = query)
+    data = json.loads(r.text)
+    lastCompetition = data["data"]["userContestRankingHistory"][-1]
+    return lastCompetition["ranking"] if lastCompetition["attended"] else "DID NOT ATTEND"
 
 #-------------------------
 #---------commands--------
@@ -79,7 +88,7 @@ async def user(ctx, user_name):
     j = await problems(user_name)
     color = random.randint(0, 0xffffff)
     message = discord.Embed(colour = color)
-    if(j > -1): # user does exist
+    if(j > -1): # if user does exist
         message.set_author(name = user_name.capitalize().replace("_", " ").replace("-", " "))
         message.add_field(name = 'Completed Problems', value = j)
     else: # user does not exist
@@ -97,8 +106,9 @@ async def update(ctx):
         p = await problems(user)
         if (p >= 0):
             collection.update_many({"_id":user},{"$set":{"week": p - x["problems"]}})
+            collection.update_many({"_id":user},{"$set":{"contest": await contest(user)}})
             print(f'Updated {user}\'s stats')
-        else: 
+        else:
             print(f'Problem updating {user}\'s stats')
     await ctx.channel.send("```diff\n+ Done!```")
     
@@ -118,8 +128,8 @@ Adds a new user to the database, sends error message if user is nonexistent
 @client.command()
 async def add(ctx, user):
     res = await problems(user)
-    if(len(list(collection.find({"_id" : user}))) <= 0 and res >= 0):
-        collection.insert_one({"_id": user, "problems": await problems(user), "week":0})
+    if(len(list(collection.find({"_id" : user}))) == 0 and res >= 0):
+        collection.insert_one({"_id": user, "problems": await problems(user), "week" : 0, "contest": await contest(user)})
         await ctx.channel.send(f'```diff\n+ Added {user}!```')
     else:
         await ctx.channel.send(f'```diff\n- Could not add {user}!```')
@@ -156,6 +166,24 @@ async def leaderboard(ctx):
     await ctx.channel.send(board)
 
 """
+A string-format generated leaderboard will be sent into the chat that the
+command was envoked in. It is sorted by the ascendingly by the ranking in
+the last weekly leetcode competition. Data might not be accurate because
+of leetcode. :(
+"""
+@client.command()
+async def comp(ctx):
+    all = collection.find().sort([('contest', 1)])
+    board = "```{:^52}\n{:^26}{:^26}\n".format("WEEKLY CONTEST LEADERBOARD","users", "ranking")
+    place = 1;
+    for x in all:
+        board += "{}{:^25}{}{:^21}\n".format(place, x["_id"], ":", x["contest"])
+        place += 1
+    board+="```"
+    disclaimer = "```fix\nDISCLAIMER: Leetcode updates their contest data much later than the competition.\n```"
+    await ctx.channel.send(board + disclaimer)
+
+"""
 Deletes every user in the database.
 Required role : leetcode-manager
 """
@@ -173,6 +201,7 @@ async def help(ctx):
     # the brackets will be replaced by the command prefix in the for loop after the array
     commands_and_description = ['{}user <leetcode username> -- total leetcode problems done of this user',
                                 '{}board -- leaderboard ranked by problems done after reset',
+                                '{}weekly -- leaderboard based on last leetcode weekly competition',
                                 '{}update -- update leaderboard to the current stats',
                                 '{}add <leetcode username> -- add the username to the leaderboard',
                                 '{}rm <leetcode username> -- remove a user from the leaderboard',
