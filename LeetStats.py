@@ -5,7 +5,7 @@ import requests
 import json
 import pymongo
 
-#Data base connection initation
+# Database connection initiation
 
 """
 Database explanation:
@@ -123,16 +123,22 @@ async def reset(ctx):
     await ctx.channel.send("```diff\n+ Reset Successfully!```")
 
 """
-Adds a new user to the database, sends error message if user is nonexistent
+Adds a new user to the database,
+sends error message if user have been added before 
+or isn't a valid LeetCode username
 """
 @client.command()
 async def add(ctx, user):
-    res = await problems(user)
-    if(len(list(collection.find({"_id" : user}))) == 0 and res >= 0):
-        collection.insert_one({"_id": user, "problems": await problems(user), "week" : 0, "contest": await contest(user)})
+    if len(list(collection.find({"_id" : user}))):
+        await ctx.channel.send(f'```diff\n- Could not add {user}: They have already been added before!```')
+
+    has_solved_problems = (await problems(user)) >= 0
+
+    if has_solved_problems:
+        user_collection.insert_one({"_id": user, "problems": await problems(user), "week" : 0, "contest": await contest(user)})
         await ctx.channel.send(f'```diff\n+ Added {user}!```')
     else:
-        await ctx.channel.send(f'```diff\n- Could not add {user}!```')
+        await ctx.channel.send(f'```diff\n- Could not add {user}: Check the username!```')
 
 """
 If the user exists in the database, removes them from it. If the user
