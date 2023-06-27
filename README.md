@@ -1,5 +1,9 @@
 # LeetStats
-#### The program currently uses less than 3% of all the data provided, which makes this a potential huge project in the future. This bot is currently very functional and can be used to host competitions amongst leetcode users.
+
+### Objective
+User will be able to invite the bot to any discord server they desire and host local competitions amongst those people;
+
+#### The program currently uses less than 3% of all the data provided, which makes this a potential huge project in the future. This bot is currently very functional and can be used to host competitions amongst leetcode users. LeetStats currently tracks contest history and the total amount of problems solved.
 
 ### NEW UPDATES
 - New leaderboard where users are ranked on how they did on the last weekly contest hosted by Leetcode.com
